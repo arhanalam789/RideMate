@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {body} = require('express-validator');
 const userController = require('../Controller/user.controller')
-
+const authmiddleware = require('../middleware/auth.middleware');
 router.post('/register',[
     body('fullname.firstname').isLength({min:3}).withMessage('First name must be at least 3 characters long'),
     body('email').isEmail().withMessage('Invalid email address'),
@@ -15,4 +15,7 @@ router.post('/login',[
 ],userController.loginUser  
 )
 
+router.get('/profile',authmiddleware.authUser,userController.getProfile);
+
+router.get('/logout',authmiddleware.authUser,userController.logoutUser);
 module.exports = router;
