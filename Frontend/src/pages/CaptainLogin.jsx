@@ -1,15 +1,20 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
+import { useContext } from "react";
+import axios from "axios";
 const CaptainLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // yaha apna submit logic likhna
+    
+    const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/captains/login`,userdata);
+    setEmail("");
+    setPassword("");
+    
   };
 
   const handleUserLogin = () => {

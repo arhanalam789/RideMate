@@ -1,31 +1,60 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { UserContext } from "../context/UserContext";
+import { useContext } from "react";
 const UserSignup = () => {
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const {user,setUser} = useContext(UserContext);
+  const navigate = useNavigate();
 
   const [errors, setErrors] = useState({});
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    let tempErrors = {};
+  let tempErrors = {};
 
-    if (firstname.length < 3) tempErrors.firstname = "First name must be at least 3 characters";
-    if (lastname && lastname.length < 3) tempErrors.lastname = "Last name must be at least 3 characters";
-    if (!email) tempErrors.email = "Email is required";
-    if (password.length < 6) tempErrors.password = "Password must be at least 6 characters";
+  if (firstname.length < 3) tempErrors.firstname = "First name must be at least 3 characters";
+  if (lastname && lastname.length < 3) tempErrors.lastname = "Last name must be at least 3 characters";
+  if (!email) tempErrors.email = "Email is required";
+  if (password.length < 6) tempErrors.password = "Password must be at least 6 characters";
 
-    setErrors(tempErrors);
+  setErrors(tempErrors);
 
-    if (Object.keys(tempErrors).length === 0) {
-      // Yaha signup logic likho (API call, etc.)
+  if (Object.keys(tempErrors).length === 0) {
+    try {
+      const newUser = { fullname: { firstname, lastname }, email, password };
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/users/register`,
+        newUser
+      );
+
+      if (response.status === 201) {
+        const data = response.data;
+        setUser(data);
+        navigate("/login");
+      }
+
+      // clear form
+      setFirstname("");
+      setLastname("");
+      setEmail("");
+      setPassword("");
+      setErrors({});
       console.log("Form submitted", { firstname, lastname, email, password });
+    } catch (err) {
+      console.error("Signup failed:", err);
+      setErrors({ api: err.response?.data?.message || "Signup failed. Try again." });
     }
-  };
+  }
+};
 
   return (
     <div className="h-screen w-full flex items-center justify-center bg-gray-100">
