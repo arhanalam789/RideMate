@@ -1,16 +1,16 @@
+// src/context/UserContext.jsx
 import React, { createContext, useState } from 'react';
 
-// 1. Create the context
 export const UserContext = createContext();
 
-// 2. Create the provider component
-const UserProvider = ({ children }) => {
+export const UserProvider = ({ children }) => {
   const [user, setUser] = useState({
-    email:'',
-    fullname:{
-      firstname:'',
-      lastname:''
-    }
+    email: '',
+    fullname: {
+      firstname: '',
+      lastname: ''
+    },
+    // add other user properties if needed
   });
 
   return (
@@ -19,5 +19,3 @@ const UserProvider = ({ children }) => {
     </UserContext.Provider>
   );
 };
-
-export default UserProvider;

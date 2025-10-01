@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { CaptainContext } from "../context/CaptainContext";
 
 const CaptainSignup = () => {
   const [firstname, setFirstname] = useState("");
@@ -10,13 +12,15 @@ const CaptainSignup = () => {
   const [showVehicleDetails, setShowVehicleDetails] = useState(false);
 
   const [color, setColor] = useState("");
-  const [licensePlate, setLicensePlate] = useState("");
-  const [capacity, setCapacity] = useState(1);
-  const [vehicleType, setVehicleType] = useState("car");
+  const [liscencePlate, setLiscencePlate] = useState("");
+  const [capicity, setCapicity] = useState(1);
+  const [vehicletype, setVehicletype] = useState("car");
 
   const [errors, setErrors] = useState({});
+  const { captain, setCaptain } = useContext(CaptainContext);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     let tempErrors = {};
@@ -28,17 +32,50 @@ const CaptainSignup = () => {
 
     if (showVehicleDetails) {
       if (color.length < 3) tempErrors.color = "Vehicle color must be at least 3 characters";
-      if (licensePlate.length < 5) tempErrors.licensePlate = "License plate must be at least 5 characters";
-      if (!capacity || capacity < 1 || capacity > 7) tempErrors.capacity = "Capacity must be between 1 and 7";
+      if (liscencePlate.length < 5) tempErrors.liscencePlate = "License plate must be at least 5 characters";
+      if (!capicity || capicity < 1 || capicity > 7) tempErrors.capicity = "Capacity must be between 1 and 7";
+      if (!vehicletype) tempErrors.vehicletype = "Vehicle type is required";
     }
 
     setErrors(tempErrors);
 
     if (Object.keys(tempErrors).length === 0) {
-      // Yaha signup logic likho
-      console.log("Form submitted", {
-        firstname, lastname, email, password, color, licensePlate, capacity, vehicleType
-      });
+      try {
+        const newCaptain = {
+          fullname: { firstname, lastname },
+          email,
+          password,
+          vehicleDetails: showVehicleDetails
+            ? { color, liscencePlate, capicity, vehicletype }
+            : undefined,
+        };
+
+        const response = await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/captains/register`,
+          newCaptain
+        );
+
+        if (response.status === 201) {
+          const data = response.data;
+          setCaptain(data);
+          navigate("/CaptainLogin");
+        }
+
+        // clear form
+        setFirstname("");
+        setLastname("");
+        setEmail("");
+        setPassword("");
+        setColor("");
+        setLiscencePlate("");
+        setCapicity(1);
+        setVehicletype("car");
+        setShowVehicleDetails(false);
+        setErrors({});
+      } catch (err) {
+        console.error("Signup failed:", err);
+        setErrors({ api: err.response?.data?.message || "Signup failed. Try again." });
+      }
     }
   };
 
@@ -133,39 +170,39 @@ const CaptainSignup = () => {
                 {errors.color && <p className="text-red-500 text-sm">{errors.color}</p>}
               </div>
 
-              {/* License Plate */}
+              {/* Liscence Plate */}
               <div className="mb-4">
                 <label className="block text-sm text-gray-800 mb-2">License Plate</label>
                 <input
                   type="text"
-                  value={licensePlate}
-                  onChange={(e) => setLicensePlate(e.target.value)}
+                  value={liscencePlate}
+                  onChange={(e) => setLiscencePlate(e.target.value)}
                   placeholder="ABC-1234"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                 />
-                {errors.licensePlate && <p className="text-red-500 text-sm">{errors.licensePlate}</p>}
+                {errors.liscencePlate && <p className="text-red-500 text-sm">{errors.liscencePlate}</p>}
               </div>
 
-              {/* Capacity */}
+              {/* Capicity */}
               <div className="mb-4">
                 <label className="block text-sm text-gray-800 mb-2">Capacity</label>
                 <input
                   type="number"
                   min="1"
                   max="7"
-                  value={capacity}
-                  onChange={(e) => setCapacity(e.target.value)}
+                  value={capicity}
+                  onChange={(e) => setCapicity(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                 />
-                {errors.capacity && <p className="text-red-500 text-sm">{errors.capacity}</p>}
+                {errors.capicity && <p className="text-red-500 text-sm">{errors.capicity}</p>}
               </div>
 
               {/* Vehicle Type */}
               <div className="mb-6">
                 <label className="block text-sm text-gray-800 mb-2">Vehicle Type</label>
                 <select
-                  value={vehicleType}
-                  onChange={(e) => setVehicleType(e.target.value)}
+                  value={vehicletype}
+                  onChange={(e) => setVehicletype(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
                 >
                   <option value="car">Car</option>
@@ -176,7 +213,6 @@ const CaptainSignup = () => {
             </div>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
             className="w-full bg-black text-white py-2 rounded-md font-semibold hover:bg-gray-800 transition"

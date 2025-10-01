@@ -1,23 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useContext } from "react";
 import axios from "axios";
+import { CaptainContext } from "../context/CaptainContext";
+
 const CaptainLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { setCaptain } = useContext(CaptainContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // yaha apna submit logic likhna
-    
-    const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/captains/login`,userdata);
-    setEmail("");
-    setPassword("");
-    
+    setError("");
+
+    if (!email || !password) {
+      setError("Email and password are required");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/captains/login`,
+        { email, password }
+      );
+
+      if (response.status === 200) {
+        const { captain, token } = response.data;
+        setCaptain(captain);              
+        localStorage.setItem("token", token); 
+        navigate("/captain-home");           
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
+
+    }
   };
 
-  const handleUserLogin = () => {
+  const switchToUserLogin = () => {
     navigate("/login");
   };
 
@@ -31,6 +51,8 @@ const CaptainLogin = () => {
             className="w-20 h-20 object-contain"
           />
         </div>
+
+        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -48,7 +70,7 @@ const CaptainLogin = () => {
 
           <div className="mb-6">
             <label className="block text-sm text-gray-800 mb-2">
-              Enter Password
+              Password
             </label>
             <input
               type="password"
@@ -68,14 +90,17 @@ const CaptainLogin = () => {
         </form>
 
         <p className="mt-4 text-sm text-center text-gray-600">
-  Ready to join the fleet?{" "}
-  <Link to="/CaptainSignup" className="text-blue-600 hover:underline">
-    Sign up as a Captain
-  </Link>
-</p>
+          New to RideMate?{" "}
+          <Link
+            to="/CaptainSignup"
+            className="text-blue-600 hover:underline"
+          >
+            Sign up as a Captain
+          </Link>
+        </p>
 
         <button
-          onClick={handleUserLogin}
+          onClick={switchToUserLogin}
           className="w-full mt-6 bg-green-600 text-white py-2 rounded-md font-semibold hover:bg-green-700 transition"
         >
           Switch to User Login
